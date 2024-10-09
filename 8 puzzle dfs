@@ -1,0 +1,75 @@
+# Directions for moving the empty tile: down, up, left, right
+row = [1, -1, 0, 0]
+col = [0, 0, -1, 1]
+
+
+# Function to check if the position is valid
+def is_valid(x, y):
+    return 0 <= x < 3 and 0 <= y < 3
+
+
+# Function to convert the 2D board to a tuple for easy hashing
+def to_tuple(mat):
+    return tuple(tuple(row) for row in mat)
+
+
+# Function to get all possible moves from the current state
+def get_neighbors(mat, blank_pos):
+    neighbors = []
+    x, y = blank_pos
+    for i in range(4):
+        new_x, new_y = x + row[i], y + col[i]
+        if is_valid(new_x, new_y):
+            new_mat = [row.copy() for row in mat]  # Copy current matrix
+            new_mat[x][y], new_mat[new_x][new_y] = new_mat[new_x][new_y], new_mat[x][y]
+            neighbors.append((new_mat, (new_x, new_y)))  # Store new board and new blank position
+    return neighbors
+
+
+# Function to solve the puzzle using DFS
+def dfs(initial, blank_pos, final, visited, path, max_depth=50):
+    if initial == final:
+        return path
+
+
+    if len(path) > max_depth:  # Prevent excessive depth exploration
+        return None
+
+
+    visited.add(to_tuple(initial))
+
+
+    for neighbor, new_blank_pos in get_neighbors(initial, blank_pos):
+        if to_tuple(neighbor) not in visited:
+            result = dfs(neighbor, new_blank_pos, final, visited, path + [neighbor], max_depth)
+            if result:
+                return result
+    visited.remove(to_tuple(initial))  # Allow for other paths
+    return None
+
+
+# Initial configuration (starting state)
+initial = [[1, 2, 3], [5, 6, 0], [7, 8, 4]]
+
+
+# Final configuration (goal state)
+final = [[1, 2, 3], [5, 8, 6], [0, 7, 4]]
+
+
+# Blank tile coordinates in initial configuration
+blank_pos = (1, 2)  # Position of the blank (0)
+
+
+# Solve the puzzle using DFS
+visited = set()
+solution = dfs(initial, blank_pos, final, visited, [])
+
+
+if solution:
+    print("DFS Solution found:")
+    for step in solution:
+        for row in step:
+            print(row)
+        print()
+else:
+    print("No solution found using DFS.")
