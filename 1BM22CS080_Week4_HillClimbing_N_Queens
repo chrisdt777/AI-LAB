@@ -1,42 +1,80 @@
-import random
+def calculate_heuristic(state):
+    """Calculates the number of conflicting queen pairs in a given state."""
+    n = len(state)
+    conflicts = 0
+    for i in range(n):
+        for j in range(i + 1, n):
+            if abs(i - j) == abs(state[i] - state[j]):
+                conflicts += 1
+    return conflicts
 
-def hill_climbing(state):
+def generate_neighbors(state):
+    """Generates all possible neighbor states by swapping two queens."""
+    neighbors = []
+    n = len(state)
+    for i in range(n):
+        for j in range(i + 1, n):
+            new_state = state.copy()
+            new_state[i], new_state[j] = new_state[j], new_state[i]
+            neighbors.append(new_state)
+    return neighbors
+
+def print_board(state):
+    """Prints the N-Queens board."""
+    n = len(state)
+    board = [['.'] * n for _ in range(n)]
+    for row in range(n):
+        board[row][state[row]] = 'Q'
+    for row in board:
+        print('  '.join(row))
+    print()
+
+def hill_climbing_n_queens(initial_state):
+    """Solves the N-Queens problem using hill climbing."""
+    current_state = initial_state
+
     while True:
-        current_cost = calculate_attacking_pairs(state)
-        neighbor = get_best_neighbor(state)
-        neighbor_cost = calculate_attacking_pairs(neighbor)
-        
-        if neighbor_cost >= current_cost:
-            return state  # Return the current state if no better neighbor
-        state = neighbor  # Move to the best neighbor
+        current_heuristic = calculate_heuristic(current_state)
+        print(f"Current State: {current_state}, Heuristic: {current_heuristic}")
+        print_board(current_state)
 
-def get_best_neighbor(state):
-    best_state = state
-    best_cost = calculate_attacking_pairs(state)
+        if current_heuristic == 0:
+            return current_state
+
+        neighbors = generate_neighbors(current_state)
+        best_neighbor = None
+        best_heuristic = float('inf')
+
+        for neighbor in neighbors:
+            heuristic = calculate_heuristic(neighbor)
+            if heuristic < best_heuristic:
+                best_heuristic = heuristic
+                best_neighbor = neighbor
+
+        if best_heuristic >= current_heuristic:
+            break
+
+        current_state = best_neighbor
+
+    return None
+
+def solve_n_queens(n, initial_state=None):
+    """Solves the N-Queens problem for a given number of queens."""
+    if initial_state is None:
+        initial_state = list(range(n))  # Initialize with a default state if not provided
+    else:
+        # Ensure the initial state is valid
+        if len(initial_state) != n or len(set(initial_state)) != n:
+            raise ValueError("Initial state must have unique values in the range [0, n-1].")
     
-    for i in range(len(state)):
-        for j in range(len(state)):
-            if j == state[i]:
-                continue  # Skip the current position
-            new_state = list(state)
-            new_state[i] = j
-            new_cost = calculate_attacking_pairs(new_state)
-            
-            if new_cost < best_cost:
-                best_cost = new_cost
-                best_state = new_state
-    return best_state
+    solution = hill_climbing_n_queens(initial_state)
 
-# Helper function to calculate number of attacking pairs
-def calculate_attacking_pairs(state):
-    attacking_pairs = 0
-    for i in range(len(state)):
-        for j in range(i + 1, len(state)):
-            if state[i] == state[j] or abs(state[i] - state[j]) == abs(i - j):
-                attacking_pairs += 1
-    return attacking_pairs
+    if solution:
+        print(f"Solution found for {n}-Queens problem: {solution}")
+        print_board(solution)
+    else:
+        print("No solution found.")
 
-# Example initial state for 4-Queens
-initial_state = [0, 1, 2, 3]
-result = hill_climbing(initial_state)
-print("Final state:", result)
+# Example: Run the solver for 4 queens with a given initial state
+initial_state = [3,1,2,0]  # Example of a given initial state
+solve_n_queens(4, initial_state)
