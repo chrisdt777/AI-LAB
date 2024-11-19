@@ -1,0 +1,63 @@
+def unify(term1, term2, subst=None):
+    if subst is None:
+        subst = {}
+    
+    # Case 1: Identical terms
+    if term1 == term2:
+        return subst
+    
+    # Case 2: If term1 is a variable, unify it with term2
+    if isinstance(term1, str) and term1.startswith('?'):
+        return unify_var(term1, term2, subst)
+    
+    # Case 3: If term2 is a variable, unify it with term1
+    if isinstance(term2, str) and term2.startswith('?'):
+        return unify_var(term2, term1, subst)
+    
+    # Case 4: Both terms are compound terms (tuples)
+    if isinstance(term1, tuple) and isinstance(term2, tuple):
+        if len(term1) != len(term2):  # Check arity (number of arguments)
+            return None
+        for t1, t2 in zip(term1, term2):
+            subst = unify(t1, t2, subst)
+            if subst is None:
+                return None
+        return subst
+
+    # Case 5: No match, return failure
+    return None
+
+def occurs_check(var, term):
+    """Check if the variable occurs inside the term."""
+    if isinstance(term, tuple):
+        for subterm in term:
+            if occurs_check(var, subterm):
+                return True
+    elif var == term:
+        return True
+    return False
+
+def unify_var(var, term, subst):
+    """Unify a variable with a term."""
+    # Occurs check: if the variable occurs inside the term, fail
+    if occurs_check(var, term):
+        return None
+    if var in subst:
+        return unify(subst[var], term, subst)
+    if term in subst:
+        return unify(var, subst[term], subst)
+    if var == term:
+        return subst
+    subst[var] = term
+    return subst
+
+# User Input and Execution
+if __name__ == "__main__":
+    term1 = eval(input("Enter the first term (e.g., ('f', '?x', 'a')): "))
+    term2 = eval(input("Enter the second term (e.g., ('f', 'b', 'a')): "))
+
+    result = unify(term1, term2)
+    if result is not None:
+        print("Unification successful! Substitution set:", result)
+    else:
+        print("Unification failed!")
