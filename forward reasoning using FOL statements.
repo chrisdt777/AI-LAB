@@ -1,0 +1,52 @@
+def forward_chaining(kb, rules, query):
+    """
+    Perform forward chaining to check if the query can be proved.
+    """
+    inferred = set(kb)  # Start with known facts
+    new_inferred = True
+    print("Initial Facts in KB:", inferred)
+
+    while new_inferred:
+        new_inferred = False
+        for rule in rules:
+            premises, conclusion = rule[:-1], rule[-1]
+
+            # Check if all premises are satisfied
+            if all(premise in inferred for premise in premises) and conclusion not in inferred:
+                inferred.add(conclusion)
+                new_inferred = True
+                print(f"Inferred: {conclusion}")
+
+                # Stop if the query is inferred
+                if conclusion == query:
+                    return True
+
+    # If query is not in inferred facts after processing all rules
+    return query in inferred
+
+
+if __name__ == "__main__":
+    # Facts in the knowledge base
+    kb = [
+        "American(Robert)",
+        "Enemy(A,America)",
+        "Missile(T1)",
+        "Owns(A,T1)"
+    ]
+
+    # Definite clauses (rules)
+    rules = [
+        ["Missile(x)", "Weapon(x)"],  # Rule 1: Missiles are weapons
+        ["Missile(x)", "Owns(A,x)", "Sells(Robert,x,A)"],  # Rule 2: Missiles sold by Robert
+        ["Enemy(x,America)", "Hostile(x)"],  # Rule 3: Enemies of America are hostile
+        ["American(p)", "Weapon(q)", "Sells(p,q,r)", "Hostile(r)", "Criminal(p)"]  # Rule 4: Criminal definition
+    ]
+
+    # Query to prove
+    query = "Criminal(Robert)"
+
+    # Perform forward chaining
+    if forward_chaining(kb, rules, query):
+        print(f"The query '{query}' is provable.")
+    else:
+        print(f"The query '{query}' is NOT provable.")
